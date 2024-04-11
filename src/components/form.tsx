@@ -9,13 +9,13 @@ import {
 import { Card } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { Data } from "../../constants/mocks";
+import "@mantine/core/styles.css";
 
 interface FormProps {
-  users: Data[];
   handleSubmit: (values: Data) => Promise<void>;
 }
 
-export function Form({ users, handleSubmit }: FormProps) {
+export function Form({ handleSubmit }: FormProps) {
   const form = useForm<Data>({
     initialValues: {
       email: "",

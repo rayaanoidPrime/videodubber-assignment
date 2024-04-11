@@ -130,7 +130,7 @@ export default function Home() {
           <Text fw={"bolder"} ff={"heading"} p={8}>
             Create a new User
           </Text>
-          <Form users={data} handleSubmit={handleFormSubmit} />
+          <Form handleSubmit={handleFormSubmit} />
         </div>
       </div>
     </main>
