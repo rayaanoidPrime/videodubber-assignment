@@ -1,94 +1,137 @@
+"use client";
+
 import Image from "next/image";
 import styles from "./page.module.css";
+import "@mantine/core/styles.css";
+import {
+  Table,
+  Checkbox,
+  ScrollArea,
+  Group,
+  Avatar,
+  Text,
+  rem,
+} from "@mantine/core";
+import { Data } from "../../constants/mocks";
+import { useEffect, useState } from "react";
+import axios from "axios";
+import cx from "clsx";
+import { Form } from "@/components/form";
 
 export default function Home() {
+  const [data, setData] = useState<Data[]>([]);
+  const [selection, setSelection] = useState<string[]>([]);
+
+  const fetchUsers = async () => {
+    try {
+      let response = await axios.get(
+        "https://63c57732f80fabd877e93ed1.mockapi.io/api/v1/users"
+      );
+      if (response.status != 200) {
+        throw new Error("Status code not 200");
+      }
+      setData(response.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const toggleRow = (id: string) =>
+    setSelection((current) =>
+      current.includes(id)
+        ? current.filter((item) => item !== id)
+        : [...current, id]
+    );
+
+  const toggleAll = () =>
+    setSelection((current) =>
+      current.length === data.length ? [] : data.map((item) => item.id)
+    );
+
+  const handleFormSubmit = async (values: Data) => {
+    try {
+      const now = new Date(); // Get current date and time
+      const isoTimestamp = now.toISOString();
+      const id = data.length + 1;
+      const response = await axios.post(
+        "https://63c57732f80fabd877e93ed1.mockapi.io/api/v1/users",
+        {
+          name: values.name,
+          avatar: values.avatar,
+          email: values.email,
+          createdAt: isoTimestamp,
+          id: id,
+        }
+      );
+      if (response.statusText !== "Created") {
+        throw new Error("Response status not 200");
+      }
+
+      fetchUsers();
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const rows = data.map((item) => {
+    const selected = selection.includes(item.id);
+    return (
+      <Table.Tr
+        key={item.id}
+        className={cx({ [styles.rowSelected]: selected })}
+      >
+        <Table.Td>
+          <Checkbox
+            checked={selection.includes(item.id)}
+            onChange={() => toggleRow(item.id)}
+          ></Checkbox>
+        </Table.Td>
+        <Table.Td>
+          <Group gap={"sm"}>
+            <Avatar size={26} src={item.avatar} radius={26} />
+            <Text size="sm" fw={500}>
+              {item.name ? item.name : item.email.split("@")[0]}
+            </Text>
+          </Group>
+        </Table.Td>
+        <Table.Td>{item.email}</Table.Td>
+      </Table.Tr>
+    );
+  });
+
   return (
     <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>src/app/page.tsx</code>
-        </p>
-        <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
+      <div className={styles.container}>
+        <ScrollArea className={styles.scrollArea}>
+          <Table miw={800} verticalSpacing="sm">
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th style={{ width: rem(40) }}>
+                  <Checkbox
+                    onChange={toggleAll}
+                    checked={selection.length === data.length}
+                    indeterminate={
+                      selection.length > 0 && selection.length !== data.length
+                    }
+                  />
+                </Table.Th>
+                <Table.Th>User</Table.Th>
+                <Table.Th>Email</Table.Th>
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>{rows}</Table.Tbody>
+          </Table>
+        </ScrollArea>
+        <div className={styles.formContainer}>
+          <Text fw={"bolder"} ff={"heading"} p={8}>
+            Create a new User
+          </Text>
+          <Form users={data} handleSubmit={handleFormSubmit} />
         </div>
-      </div>
-
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className={styles.grid}>
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p>Find in-depth information about Next.js features and API.</p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Learn <span>-&gt;</span>
-          </h2>
-          <p>Learn about Next.js in an interactive course with&nbsp;quizzes!</p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p>Explore starter templates for Next.js.</p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
       </div>
     </main>
   );
