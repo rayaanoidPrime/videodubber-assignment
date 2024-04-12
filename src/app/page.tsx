@@ -56,7 +56,10 @@ export default function Home() {
     try {
       const now = new Date(); // Get current date and time
       const isoTimestamp = now.toISOString();
-      const id = data.length + 1;
+      const sortedData = data
+        .slice()
+        .sort((a, b) => Number(b.id) - Number(a.id));
+      const newId = Number(sortedData[0].id) + 1;
       const response = await axios.post(
         "https://63c57732f80fabd877e93ed1.mockapi.io/api/v1/users",
         {
@@ -64,13 +67,13 @@ export default function Home() {
           avatar: values.avatar,
           email: values.email,
           createdAt: isoTimestamp,
-          id: id,
+          id: newId,
         }
       );
       if (response.statusText !== "Created") {
         throw new Error("Response status not 200");
       }
-
+      console.log(newId);
       fetchUsers();
     } catch (error) {
       console.error(error);
@@ -79,6 +82,9 @@ export default function Home() {
 
   const rows = data.map((item) => {
     const selected = selection.includes(item.id);
+    if (Array.isArray(item.email)) {
+      item.email = item.email.join(",");
+    }
     return (
       <Table.Tr
         key={item.id}
